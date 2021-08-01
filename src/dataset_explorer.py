@@ -50,7 +50,7 @@ class DatasetExplorer:
     def get_accent_ids(self, train_set: bool) -> [str]:
         accents_directory_path = self.__create_accents_directory_path(train_set)
         return [accent_id for accent_id in os.listdir(accents_directory_path)
-                if os.path.isdir(accents_directory_path + '/' + accent_id)]
+                if os.path.isdir(accents_directory_path + '/' + accent_id)][0:1]
 
     def get_speaker_ids(self, train_set: bool, accent_id: str) -> [str]:
         speakers_directory_path = self.__create_speakers_directory_path(train_set, accent_id)

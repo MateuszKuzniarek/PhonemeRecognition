@@ -1,4 +1,4 @@
-from src.constants import MILLISECONDS_IN_SECOND
+from src.constants import MILLISECONDS_IN_SECOND, PHONEME_SYMBOLS
 from src.settings import FRAME_LENGTH_IN_MS
 
 
@@ -7,7 +7,7 @@ class PhonemeData:
     def __init__(self, beginning: int, end: int, phoneme: str):
         self.beginning = beginning
         self.end = end
-        self.phoneme = phoneme
+        self.phoneme = PHONEME_SYMBOLS.index(phoneme)
 
 
 class WaveFileData:

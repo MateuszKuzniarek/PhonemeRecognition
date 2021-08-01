@@ -1,27 +1,16 @@
 from src.data_preparation import get_features, prepare_data
 from src.dataset_explorer import DatasetExplorer
+from src.model_creation import get_lstm_model
+from src.settings import NUMBER_OF_MFCCS, BATCH_SIZE, NUMBER_OF_EPOCHS, VALIDATION_SPLIT
 
 if __name__ == "__main__":
-    print('hello world')
-    dataset_explorer = DatasetExplorer('../data/TIMIT')
-    # for accent in dataset_explorer.get_accent_ids(True):
-    #     print(accent)
-    #     for speaker in dataset_explorer.get_speaker_ids(True, accent):
-    #         print('--' + speaker)
-    #         for sentence in dataset_explorer.get_sentences_ids(True, accent, speaker):
-    #             print('----' + sentence)
+    x_train, y_train = prepare_data(training_data=True)
+    model = get_lstm_model(input_shape=(x_train.shape[1], NUMBER_OF_MFCCS * 3))
 
+    history = model.fit(x_train, y_train, batch_size=BATCH_SIZE, epochs=NUMBER_OF_EPOCHS,
+                        validation_split=VALIDATION_SPLIT)
 
-    # wave_data = dataset_explorer.get_wave_data(True, 'DR1', 'FCJF0', 'SA1')
-    # print(wave_data.raw_data)
-    # print(len(wave_data.raw_data))
-    # print(wave_data.sampling_rate)
-    # features = get_features(wave_data)
-    # print(features.shape)
-    # phoneme_data = dataset_explorer.get_phoneme_data(True, 'DR1', 'FCJF0', 'SA1')
-    # for row in phoneme_data:
-    #     print(row.beginning)
-    #     print(row.end)
-    #     print(row.phoneme)
+    x_test, y_test = prepare_data(training_data=False)
 
-    x, y = prepare_data(True)
+    test_results = model.evaluate(x_test, y_test, verbose=False)
+    print(f'Test results - Loss: {test_results[0]} - Accuracy: {100*test_results[1]}%')

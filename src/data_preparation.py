@@ -1,20 +1,22 @@
 from keras_preprocessing.sequence import pad_sequences
 from librosa.feature import mfcc, delta
-from numpy import concatenate
+from numpy import concatenate, array
+from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from src.constants import SILENCE_SYMBOL
+from src.constants import SILENCE_SYMBOL, PHONEME_SYMBOLS
 from src.data_formats import WaveFileData, PhonemeData
 from src.dataset_explorer import DatasetExplorer
-from src.settings import DATASET_PATH
+from src.settings import DATASET_PATH, NUMBER_OF_MFCCS
 
 
 def get_features(wave_data: WaveFileData) -> [[float]]:
-    mfccs = mfcc(y=wave_data.raw_data, sr=wave_data.sampling_rate, hop_length=wave_data.frame_length)
+    mfccs = mfcc(y=wave_data.raw_data, sr=wave_data.sampling_rate, hop_length=wave_data.frame_length,
+                 n_mfcc=NUMBER_OF_MFCCS)
     mfcc_deltas = delta(mfccs)
     mfcc_deltas_deltas = delta(mfccs, order=2)
     features = concatenate((mfccs, mfcc_deltas))
     features = concatenate((features, mfcc_deltas_deltas))
-    return features
+    return features.T
 
 
 def get_phonemes_frame_vector(phoneme_series: [PhonemeData], frame_length: int, frame_count: int) -> [str]:
@@ -36,7 +38,7 @@ def get_phonemes_frame_vector(phoneme_series: [PhonemeData], frame_length: int, 
     biggest_fragment = max(frame_fragments)
     result.append(biggest_fragment[1])
     additional_frames_count = frame_count - len(result)
-    result.extend([SILENCE_SYMBOL for i in range(additional_frames_count)])
+    result.extend([PHONEME_SYMBOLS.index(SILENCE_SYMBOL) for i in range(additional_frames_count)])
     return result
 
 
@@ -51,13 +53,9 @@ def prepare_data(training_data: bool):
                 phoneme_data = dataset_explorer.get_phoneme_data(training_data, accent, speaker, sentence)
                 features = get_features(wave_data)
                 inputs.append(features)
-                outputs.append(get_phonemes_frame_vector(phoneme_data, wave_data.frame_length, features.shape[1]))
+                output = get_phonemes_frame_vector(phoneme_data, wave_data.frame_length, features.shape[0])
+                outputs.append(to_categorical(output, num_classes=len(PHONEME_SYMBOLS)))
                 print(accent + speaker + sentence)
-    print(inputs)
-    print('---')
-    inputs = pad_sequences(inputs)
-    print(inputs)
-    print('---')
-    print(outputs)
-    print('---')
+    inputs = pad_sequences(inputs, dtype='float32', padding='post')
+    outputs = pad_sequences(outputs, maxlen=inputs.shape[1], dtype='int32', padding='post')
     return inputs, outputs
