@@ -1,11 +1,12 @@
 from keras_preprocessing.sequence import pad_sequences
 from librosa.feature import mfcc, delta
-from numpy import concatenate, array
+from numpy import concatenate, array, ndarray
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from src.constants import SILENCE_SYMBOL, PHONEME_SYMBOLS
 from src.data_formats import WaveFileData, PhonemeData
 from src.dataset_explorer import DatasetExplorer
+from src.normalization import Normalizer
 from src.settings import DATASET_PATH, NUMBER_OF_MFCCS
 
 
@@ -42,7 +43,7 @@ def get_phonemes_frame_vector(phoneme_series: [PhonemeData], frame_length: int, 
     return result
 
 
-def prepare_data(training_data: bool):
+def construct_arrays(training_data: bool) -> ndarray:
     inputs = []
     outputs = []
     dataset_explorer = DatasetExplorer(DATASET_PATH)
@@ -56,6 +57,30 @@ def prepare_data(training_data: bool):
                 output = get_phonemes_frame_vector(phoneme_data, wave_data.frame_length, features.shape[0])
                 outputs.append(to_categorical(output, num_classes=len(PHONEME_SYMBOLS)))
                 print(accent + speaker + sentence)
+    return array(inputs), array(outputs)
+
+
+def pad_arrays(inputs: ndarray, outputs: ndarray) -> ndarray:
     inputs = pad_sequences(inputs, dtype='float32', padding='post')
     outputs = pad_sequences(outputs, maxlen=inputs.shape[1], dtype='int32', padding='post')
     return inputs, outputs
+
+
+def normalize_inputs(inputs: ndarray, normalizer: Normalizer):
+    for sample in range(0, len(inputs)):
+        for sequence in range(0, len(inputs[sample])):
+            inputs[sample][sequence] = normalizer.normalize_vector(inputs[sample][sequence])
+
+
+def prepare_training_data() -> (ndarray, ndarray, Normalizer):
+    inputs, outputs = construct_arrays(training_data=True)
+    normalizer = Normalizer(concatenate(inputs, axis=0))
+    normalize_inputs(inputs, normalizer)
+    inputs, outputs = pad_arrays(inputs, outputs)
+    return inputs, outputs, normalizer
+
+
+def prepare_testing_data(normalizer: Normalizer) -> (ndarray, ndarray):
+    inputs, outputs = construct_arrays(training_data=False)
+    normalize_inputs(inputs, normalizer)
+    return pad_arrays(inputs, outputs)
