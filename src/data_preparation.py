@@ -40,6 +40,7 @@ def get_phonemes_frame_vector(phoneme_series: [PhonemeData], frame_length: int, 
     result.append(biggest_fragment[1])
     additional_frames_count = frame_count - len(result)
     result.extend([PHONEME_SYMBOLS.index(SILENCE_SYMBOL) for i in range(additional_frames_count)])
+    result = result[:frame_count]
     return result
 
 
