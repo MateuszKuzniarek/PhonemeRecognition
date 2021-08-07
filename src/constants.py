@@ -6,3 +6,4 @@ PHONEME_SYMBOLS = ['b', 'd', 'g', 'p', 't', 'k', 'dx', 'jh', 'ch', 's', 'sh', 'z
 PHONEME_MAPPINGS = {'aa': ['ao'], 'ah': ['ax', 'ax-h'], 'er': ['axr'], 'hh': ['hv'], 'ih': ['ix'], 'l': ['el'],
                     'm': ['em'], 'n': ['en', 'nx'], 'ng': ['eng'], 'sh': ['zh'], 'uw': ['ux'],
                     'sil': ['pcl', 'tcl', 'kcl', 'bcl', 'dcl', 'gcl', 'h#', 'pau', 'epi']}
+SETTINGS_PATH = './settings.py'
